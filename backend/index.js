@@ -1,39 +1,49 @@
 
 
-import express from 'express';
-import * as dotenv from 'dotenv';
-import cors from 'cors';
+import express from "express"
+const app = express()
+import dotenv from "dotenv"
+import { connectdb } from "./config/db.js";
+import cors from 'cors'
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import authRoutes from "./routes/auth.routes.js";
+import propertyRoutes from "./routes/property.routes.js";
+import wishlistRoutes from "./routes/wishList.route.js";
+import orderRoutes from "./routes/payment.routes.js";
 
-import connectDB from './mongodb/connect.js';
-
-// Import routes
-import userRouter from './routes/user.routes.js';
-import propertyRouter from './routes/property.routes.js';
 
 dotenv.config();
+connectdb();
+app.use(express.json())
+app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(cors({
+    origin:"http://localhost:3000",
+    credentials:true,
+}))
+const port = process.env.PORT
 
-const app = express();
-app.use(cors());
-app.use(express.json({ limit: '50mb' }))
+app.use('/api/auth', authRoutes);
+app.use('/api/property', propertyRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/orders', orderRoutes);
 
-app.get('/', (req, res) => {
-    // res.send({ 
-    //   message: 'developer uday adlakha' 
-    // })
-    res.send("hello uday ji ")
+app.get('/',(req,res)=>{
+    res.send("welcome to index page ")
 })
 
-app.use('/api/v1/users', userRouter);
-app.use('/api/v1/properties', propertyRouter);
+app.listen(port,()=>{
+    console.log(`your server is running on http://localhost:${port}`)
+})
 
-const startServer = async () => {
-  try{
-    connectDB(process.env.MONGODB_URL);
 
-    app.listen(8080, () => console.log('Server started on port http://localhost:8080'))
-  } catch(error) {
-    console.log(error);
-  }
-}
-
-startServer();
+process.on('SIGINT', async () => {
+    console.log('SIGINT received. Closing MongoDB connection...');
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed.');
+    server.close(() => {
+        console.log('Server shut down.');
+        process.exit(0);
+    });
+});

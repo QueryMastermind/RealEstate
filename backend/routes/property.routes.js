@@ -1,24 +1,23 @@
-// Imports and exports the CRUD controller. This is a bit hacky but I'm going to keep it in sync with the code
+import express from 'express';
+import {createProperty, approveProperty, deleteProperty, updateProperty,getPropertys,getPropertyById} from '../controllers/property.controller.js';
+import { authenticateToken, authorizeRoles } from '../middleware/authMiddleware.js';
+import upload from '../config/multer.js';
 
-import express from "express";
-
-// Import all controllers
-import { 
-    createProperty,
-    deleteProperty,
-    getAllProperties,
-    getPropertyDetail,
-    updateProperty
- } from "../controllers/property.controller.js";
-
-
-// Express router created for each controller
 const router = express.Router();
 
-router.route('/').get(getAllProperties);
-router.route('/:id').get(getPropertyDetail);
-router.route('/').post(createProperty);
-router.route('/:id').patch(updateProperty);
-router.route('/:id').delete(deleteProperty);
+// Create a Property (Seller)
+router.post('/addProperty', authenticateToken, authorizeRoles('seller'),upload.array('pictures'), createProperty);
+
+// Approve a Property (Admin)
+router.patch('/approveProperty/:id', authenticateToken, authorizeRoles('admin'), approveProperty);
+
+// Delete a Property (Admin or Seller)
+router.delete('/deleteProperty/:id', authenticateToken, authorizeRoles('admin', 'seller'), deleteProperty);
+
+// Update a Property (Seller)
+router.put('/updateProperty/:id', authenticateToken, authorizeRoles('seller'),upload.array('pictures'), updateProperty);
+
+router.get('/getProperty', getPropertys);
+router.get('/getProperty/:id', getPropertyById);
 
 export default router;
